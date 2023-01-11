@@ -1,0 +1,64 @@
+C*****************************************************************
+C*** Export von Knotendaten
+C*****************************************************************
+*DEL,coords_1
+*DEL,coords_2
+*DEL,header
+
+/POST1
+SET,LAST
+
+ALLSEL
+*GET,NodeCount_1,NODE,,COUNT				! Get total number of Nodes
+
+
+*VGET,dEPTOXs,NODE,,EPTO,X
+*VGET,dEPTOYs,NODE,,EPTO,Y
+*VGET,dEPTOXYs,NODE,,EPTO,XY
+*VGET,dEPTOEQVs,NODE,,EPTO,EQV
+*VGET,dUXs,NODE,,U,X			
+*VGET,dUYs,NODE,,U,Y			
+*VGET,dUZs,NODE,,U,Z			
+
+
+*DIM,coords_1,ARRAY,NodeCount_1,14			! Prepare Output-File
+*VGET,coords_1(1,1),NODE,,NLIST				! Node index 
+*VGET,coords_1(1,2),NODE,coords_1(1,1),LOC,X		! Undeformed coordinates X
+*VGET,coords_1(1,3),NODE,coords_1(1,1),LOC,Y		! Undeformed coordinates Y
+*VGET,coords_1(1,4),NODE,coords_1(1,1),LOC,Z		! Undeformed coordinates Z
+*VGET,coords_1(1,5),NODE,coords_1(1,1),U,X		! Displacements X
+*VGET,coords_1(1,6),NODE,coords_1(1,1),U,Y		! Displacements Y
+*VGET,coords_1(1,7),NODE,coords_1(1,1),U,Z		! Displacements Z
+*VOPER,coords_1(1,8),dEPTOXs,MULT,100.0			! Total strains X
+*VOPER,coords_1(1,9),dEPTOYs,MULT,100.0			! Total strains Y
+*VOPER,coords_1(1,10),dEPTOXYs,MULT,0.5			! Total strains XY
+*VOPER,coords_1(1,11),dEPTOEQVs,MULT,100.0		! Total strains XY
+*VGET,coords_1(1,12),NODE,coords_1(1,1),S,X		! Stress X
+*VGET,coords_1(1,13),NODE,coords_1(1,1),S,Y		! Stress Y
+*VGET,coords_1(1,14),NODE,coords_1(1,1),S,XY		! Stress XY
+
+
+*DIM,header,string,10,14
+header(1,1)='index'
+header(1,2)='x_undf'
+header(1,3)='y_undf'
+header(1,4)='z_undf'
+header(1,5)='ux'
+header(1,6)='uy'
+header(1,7)='uz'
+header(1,8)='eps_x'
+header(1,9)='eps_y'
+header(1,10)='eps_xy'
+header(1,11)='eps_eqv'
+header(1,12)='s_x'
+header(1,13)='s_y'
+header(1,14)='s_xy'
+
+
+*VMASK,mask_1
+*CFOPEN,Nodemap,txt
+*VWRITE,header(1,1),header(1,2),header(1,3),header(1,4),header(1,5),header(1,6),header(1,7),header(1,8),header(1,9),header(1,10),header(1,11),header(1,12),header(1,13),header(1,14)
+('#',A11,13(';',A12))
+*VWRITE,coords_1(1,1),coords_1(1,2),coords_1(1,3),coords_1(1,4),coords_1(1,5),coords_1(1,6),coords_1(1,7),coords_1(1,8),coords_1(1,9),coords_1(1,10),coords_1(1,11),coords_1(1,12),coords_1(1,13),coords_1(1,14)
+(13(F12.5,';')F12.5)
+*CFCLOSE

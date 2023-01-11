@@ -1,0 +1,276 @@
+/BATCH
+
+
+C**********************************************************************************************
+C**********************************************************************************************
+C*** Parameterstudie: MT Proben Modell
+C*** 21.04.2022, David Melching
+C**********************************************************************************************
+C**********************************************************************************************
+C*** Einheitensystem: [N], [mm], [MPa], [t*mm^(-3)], [N/mm^2 * sqrt(mm^2)]
+
+finish
+/clear
+
+/TITLE, MT
+/PLOPTS,DATE,0
+
+
+/PREP7
+SELTOL,0.01
+
+
+
+C*****************************************************************
+C*** Variablen
+C*****************************************************************
+/input,00_variables,inp
+
+
+	
+C*****************************************************************
+C*** Materialparameter
+C*****************************************************************
+
+!2024-T3
+MP,EX,1,72000		!E-Modul (N/mm^2)
+MP,NUXY,1,0.33		!Querkontraktionszahl
+
+
+
+C*****************************************************************
+C*** Elementtypen
+C*****************************************************************
+
+ET,1,PLANE182		!3-D 8-Node Structural Solid
+KEYOPT,1,3,0		!plane stress
+
+
+
+C*****************************************************************
+C*** Modell erstellen
+C*****************************************************************
+LOCAL,11,0,,,,thxy
+CLOCAL,12,0,a
+CSYS,11
+CLOCAL,13,0,-a,,,180
+CSYS,0
+
+
+K, 1,	0,		0
+CSYS,11
+K, 2,	a,		0
+CSYS,0
+K, 3,	w/2,		0
+K, 4, 	w/2, 		h/2
+K, 5, 	w/2*alpha, 	h/2
+K, 6, 	0,		h/2
+
+K, 7, 	w/2, 		-h/2
+K, 8, 	w/2*alpha, 	-h/2
+K, 9, 	0,		-h/2
+K,10,	0,		0
+
+CSYS,11
+K, 11,	-a,		0
+CSYS,0
+K, 12,	-w/2,		0
+K, 13, 	-w/2, 		h/2
+K, 14, 	-w/2*alpha, 	h/2
+K, 15, 	-w/2, 		-h/2
+K, 16, 	-w/2*alpha, 	-h/2
+
+
+A,1,2,5,6
+A,2,3,4,5
+A,10,2,8,9
+A,2,3,7,8
+A,1,6,14,11
+A,11,14,13,12
+A,10,9,16,11
+A,12,11,16,15
+
+
+			! Mesh refinement vorbereiten
+WPCSYS,,12
+WPOFFS,-ref_window
+WPROTA,,,90 
+ASBW,ALL,,DELETE
+WPCSYS,,0 
+
+WPCSYS,,12
+WPOFFS,ref_window
+WPROTA,,,90 
+ASBW,ALL,,DELETE
+WPCSYS,,0 
+
+WPCSYS,,12
+WPOFFS,,-ref_window
+WPROTA,,90 
+ASBW,ALL,,DELETE
+WPCSYS,,0
+
+WPCSYS,,12
+WPOFFS,,ref_window
+WPROTA,,90 
+ASBW,ALL,,DELETE
+WPCSYS,,0
+
+
+
+C*****************************************************************
+C*** Meshing 
+C*****************************************************************
+
+CSYS,12			! Fine mesh around crack tip
+ASEL,S,LOC,X,-ref_window,ref_window
+ASEL,R,LOC,Y,-ref_window,ref_window
+ESIZE,esize
+AMESH,ALL
+
+ASEL,INVE		! Coarse mesh away from crack tip
+ESIZE,2
+AMESH,ALL
+
+
+ALLSEL
+CSYS,0
+
+*GET,nel,ELEM,0,COUNT
+*GET,nno,NODE,0,COUNT
+
+ALLSEL
+
+
+
+C*****************************************************************
+C*** Randbedinungen
+C*****************************************************************
+/SOLU
+
+
+NSEL,S,LOC,Y,h/2		! Y-Verschiebung oben koppeln
+CP,NEXT,UY,ALL
+
+NSEL,R,LOC,X,0			! Kraftanbringung in Y-Richtung oben
+F,ALL,FY,force
+ALLSEL
+
+NSEL,S,LOC,Y,-h/2		! Verhinderung der Verschiebung in Y-Richtung unten
+D,ALL,UY,0
+ALLSEL
+
+NSEL, S,LOC,Y,-h/2		! Verhinderung der Verschiebung in X-Richtung unten
+D,ALL,UX,0
+
+NSEL, S,LOC,Y,h/2		! Verhinderung der Verschiebung in X-Richtung oben
+D,ALL,UX,0
+
+ALLSEL
+
+
+CSYS,12				! Define the right crack tip as a component.
+NSEL,S,LOC,X,0
+NSEL,R,LOC,Y,0
+CM,CRACK_TIP_NODE_CM1,node
+
+
+CSYS,0
+NSEL,S,LOC,X,0
+NSEL,R,LOC,Y,0
+*GET,nod,NODE,0,NUM,max
+
+
+
+
+				! Define a new VCCT calculation
+CINT,NEW,1
+CINT,TYPE,VCCT	!SIFS oder JINT oder VCCT
+CINT,CTNC,CRACK_TIP_NODE_CM1,nod,1
+CINT,NORM,12,2
+CINT,SYMM,OFF
+
+				! Define a new J-Integral calculation
+CINT,NEW,2
+CINT,TYPE,JINT	!SIFS oder JINT oder VCCT
+CINT,CTNC,CRACK_TIP_NODE_CM1,nod,1
+CINT,NORM,12,2
+CINT,NCON,50
+CINT,SYMM,OFF
+
+CINT,NEW,3
+CINT,TYPE,SIFS	!SIFS oder JINT oder VCCT
+CINT,CTNC,CRACK_TIP_NODE_CM1,nod,1
+CINT,NORM,12,2
+CINT,NCON,6
+CINT,SYMM,OFF
+
+CINT,NEW,4
+CINT,TYPE,TSTRESS	!SIFS oder JINT oder VCCT
+CINT,CTNC,CRACK_TIP_NODE_CM1,nod,1
+CINT,NORM,12,2
+CINT,NCON,6
+CINT,SYMM,OFF
+
+
+
+
+C*****************************************************************
+C*** Lösen
+C*****************************************************************
+ALLSEL
+*get,anfangszeit,active,0,time,wall
+
+OUTRES,CINT,LAST
+OUTRES,ALL,LAST
+
+SOLVE
+
+
+*get,endzeit,active,0,time,wall
+rechenzeit=endzeit-anfangszeit
+
+
+
+
+C*****************************************************************
+C*** Postprocessing
+C*****************************************************************
+/POST1
+CSYS,0
+
+
+!/show,png
+
+!PLDISP,0
+!PLESOL,S,EQV,0,1.0
+!PLNSOL,S,EQV,0,1.0
+
+!/show,close
+
+/REPLOT,RESIZE
+
+
+
+
+C*****************************************************************
+C*** Ausgabe von VCCT und J-Integral
+C*****************************************************************
+
+/POST1
+SET,LAST
+PRCINT,1
+PRCINT,2
+PRCINT,3
+PRCINT,4
+
+ALLSEL
+
+C*****************************************************************
+C*** Export
+C*****************************************************************
+
+
+
+/INPUT,04_export,inp
+/INPUT,04_nodedata_export,inp

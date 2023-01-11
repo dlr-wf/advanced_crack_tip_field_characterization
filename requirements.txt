@@ -1,0 +1,2 @@
+crackpy==0.9.3
+ansys-mapdl-core==0.63.1

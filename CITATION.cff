@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+- family-names: "Melching"
+  given-names: "David"
+  orcid: "https://orcid.org/0000-0001-5111-6511"
+- family-names: "Breitbarth"
+  given-names: "Eric"
+  orcid: "https://orcid.org/0000-0002-3479-9143"
+title: "Advanced crack tip field characterization"
+version: 1.0.0
+doi: 
+date-released: 2023-01-10
+url: "https://github.com/dlr_wf/advanced_crack_tip_field_characterization"
+preferred-citation:
+  type: article
+  authors:
+  - family-names: "Melching"
+    given-names: "David"
+    orcid: "https://orcid.org/0000-0001-5111-6511"
+  - family-names: "Breitbarth"
+    given-names: "Eric"
+    orcid: "https://orcid.org/0000-0002-3479-9143"
+  doi: "10.1016/j.ijfatigue.2023.107501"
+  journal: "International Journal of Fatigue"
+  title: "Advanced crack tip field characterization using conjugate work integrals"
+  volume: 169
+  pages: 107501
+  year: 2023

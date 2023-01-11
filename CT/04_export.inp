@@ -1,0 +1,92 @@
+C*****************************************************************
+C*** Export von Rissdaten
+C*****************************************************************
+
+/input,00_variables,inp
+/input,04_nodedata_export,inp
+
+/POST1
+SET,LAST
+CSYS,0
+RSYS,0
+ESEL,S,TYPE,,1
+*DEL,export,,nopr 
+
+				!VCCT und J-Integral nur ausführen, wenn elastische Rechnung
+CMSEL,S,CRACK_TIP_NODE_CM1,NODE
+
+*GET,nsel,NODE,0,COUNT
+*GET,nmin,NODE,0,NUM,MIN
+*DIM,export,ARRAY,nsel,41
+
+nodenum=0
+*DO,kk,1,nsel
+	nodenum=ndnext(nodenum)
+	export(kk,1)=nodenum					!Knotennummer
+	export(kk,2)=NZ(nodenum)				!z-Koordinate des Knotens
+	*GET,export(kk,3),NODE,nodenum,S,X			!x Spannungskomponenten 
+	*GET,export(kk,4),NODE,nodenum,S,Y			!y Spannungskomponenten
+	*GET,export(kk,5),NODE,nodenum,S,Z			!z Spannungskomponenten
+	*GET,export(kk,6),NODE,nodenum,EPEL,X			!x Dehnungskomponente 
+	*GET,export(kk,7),NODE,nodenum,EPEL,Y			!y Dehnungskomponente
+	*GET,export(kk,8),NODE,nodenum,EPEL,Z			!z Dehnungskomponente
+	*GET,export(kk,9),CINT,1,,nodenum,,1,,G1		!G1 aus VCCT
+	*GET,export(kk,10),CINT,1,,nodenum,,1,,G2		!G2 aus VCCT
+	*GET,export(kk,11),CINT,1,,nodenum,,1,,G3		!G3 aus VCCT
+	*GET,export(kk,12),CINT,2,,nodenum,,1,,JINT		!J-Ingegral Kontur 1
+	*GET,export(kk,13),CINT,2,,nodenum,,2,,JINT		!J-Ingegral Kontur 2
+	*GET,export(kk,14),CINT,2,,nodenum,,3,,JINT		!J-Ingegral Kontur 3
+	*GET,export(kk,15),CINT,2,,nodenum,,4,,JINT		!J-Ingegral Kontur 4
+	*GET,export(kk,16),CINT,2,,nodenum,,5,,JINT		!J-Ingegral Kontur 5
+	*GET,export(kk,17),CINT,2,,nodenum,,6,,JINT		!J-Ingegral Kontur 6
+	*GET,export(kk,18),CINT,3,,nodenum,,1,,K1		!SIFS K1 Kontur 1
+	*GET,export(kk,19),CINT,3,,nodenum,,2,,K1		!SIFS K1 Kontur 2
+	*GET,export(kk,20),CINT,3,,nodenum,,3,,K1		!SIFS K1 Kontur 3
+	*GET,export(kk,21),CINT,3,,nodenum,,4,,K1		!SIFS K1 Kontur 4
+	*GET,export(kk,22),CINT,3,,nodenum,,5,,K1		!SIFS K1 Kontur 5
+	*GET,export(kk,23),CINT,3,,nodenum,,6,,K1		!SIFS K1 Kontur 6
+	*GET,export(kk,24),CINT,3,,nodenum,,1,,K2		!SIFS K2 Kontur 1
+	*GET,export(kk,25),CINT,3,,nodenum,,2,,K2		!SIFS K2 Kontur 2
+	*GET,export(kk,26),CINT,3,,nodenum,,3,,K2		!SIFS K2 Kontur 3
+	*GET,export(kk,27),CINT,3,,nodenum,,4,,K2		!SIFS K2 Kontur 4
+	*GET,export(kk,28),CINT,3,,nodenum,,5,,K2		!SIFS K2 Kontur 5
+	*GET,export(kk,29),CINT,3,,nodenum,,6,,K2		!SIFS K2 Kontur 6
+	*GET,export(kk,30),CINT,3,,nodenum,,1,,K3		!SIFS K3 Kontur 1
+	*GET,export(kk,31),CINT,3,,nodenum,,2,,K3		!SIFS K3 Kontur 2
+	*GET,export(kk,32),CINT,3,,nodenum,,3,,K3		!SIFS K3 Kontur 3
+	*GET,export(kk,33),CINT,3,,nodenum,,4,,K3		!SIFS K3 Kontur 4
+	*GET,export(kk,34),CINT,3,,nodenum,,5,,K3		!SIFS K3 Kontur 5
+	*GET,export(kk,35),CINT,3,,nodenum,,6,,K3		!SIFS K3 Kontur 6
+	*GET,export(kk,36),CINT,4,,nodenum,,1,,TSTRESS		!TSTRESS Kontur 1
+	*GET,export(kk,37),CINT,4,,nodenum,,2,,TSTRESS		!TSTRESS Kontur 2
+	*GET,export(kk,38),CINT,4,,nodenum,,3,,TSTRESS		!TSTRESS Kontur 3
+	*GET,export(kk,39),CINT,4,,nodenum,,4,,TSTRESS		!TSTRESS Kontur 4
+	*GET,export(kk,40),CINT,4,,nodenum,,5,,TSTRESS		!TSTRESS Kontur 5
+	*GET,export(kk,41),CINT,4,,nodenum,,6,,TSTRESS		!TSTRESS Kontur 6
+*ENDDO
+
+*MWRITE,export,Output,txt
+(F10.1, ',' ,(39(F20.10',')F20.10) )
+
+*get,dEX,EX,1,TEMP,0 
+
+K_I_VCCT=sqrt(abs(export(kk,9)*dEX/1000.0))
+K_II_VCCT=sqrt(abs(export(kk,10))*dEX/1000.0)
+K_III_VCCT=sqrt(abs(export(kk,11)*dEX/1000.0))
+
+K_I_SIFS=(export(kk,21)+export(kk,22)+export(kk,23))/3/sqrt(1000.0)
+K_II_SIFS=(export(kk,27)+export(kk,28)+export(kk,29))/3/sqrt(1000.0)
+K_III_SIFS=(export(kk,33)+export(kk,34)+export(kk,35))/3/sqrt(1000.0)
+
+K_V_VCCT=K_I_VCCT/2+0.5*sqrt(abs(K_I_VCCT**2+5.336*K_II_VCCT**2+4*K_III_VCCT**2))
+K_V_SIFS=K_I_SIFS/2+0.5*sqrt(abs(K_I_SIFS**2+5.336*K_II_SIFS**2+4*K_III_SIFS**2))
+
+
+*CFOPEN,Vergleich,txt,,
+*VWRITE,'K_I_VCCT,','K_II_VCCT,','K_III_VCCT,','K_I_SIFS,','K_II_SIFS,','K_III_SIFS,','K_V_VCCT,','K_V_SIFS'
+(A11,A11,A11,A11,A11,A11,A11,A11)
+
+*VWRITE,K_I_VCCT,K_II_VCCT,K_III_VCCT,K_I_SIFS,K_II_SIFS,K_III_SIFS,K_V_VCCT,K_V_SIFS
+(F10.2,',',F10.2,',',F10.2,',',F10.2,',',F10.2,',',F10.2,',',F10.2,',',F10.2)
+*CFCLOS
+

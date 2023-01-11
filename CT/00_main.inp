@@ -1,0 +1,303 @@
+/BATCH
+
+
+C**********************************************************************************************
+C**********************************************************************************************
+C*** Parameterstudie: CT Proben Modell
+C*** 04.05.2022, David Melching
+C**********************************************************************************************
+C**********************************************************************************************
+C*** Einheitensystem: [N], [mm], [MPa], [t*mm^(-3)], [N/mm^2 * sqrt(mm)]
+
+finish
+/clear
+
+/TITLE,
+/PLOPTS,DATE,0
+
+
+/PREP7
+SELTOL,0.01
+
+
+
+C*****************************************************************
+C*** Variablen
+C*****************************************************************
+/input,00_variables,inp
+
+
+
+C*****************************************************************
+C*** Materialparameter
+C*****************************************************************
+
+!2024-T3
+MP,EX,1,72000				!E-Modul (N/mm^2)
+MP,NUXY,1,0.33				!Querkontraktionszahl
+
+!DUMMY
+MP,EX,2,1000000				!E-Modul (N/mm^2)
+MP,NUXY,2,0.5				!Querkontraktionszahl
+
+
+
+C*****************************************************************
+C*** Elementtypen
+C*****************************************************************
+
+ET,1,PLANE182
+KEYOPT,1,3,3
+R,1,t
+
+ET,2,BEAM188
+
+SECTYPE,1,BEAM,RECT
+SECDATA,10,10
+
+
+
+C*****************************************************************
+C*** Modell erstellen
+C*****************************************************************
+LOCAL, 20, 0, a
+CSYS,0
+
+K,1,	-BL, 	0
+K,2,	a,	0
+K,3,	BR,	0
+K,4,	BR,	h/2
+K,5,	a,	h/2
+K,6,	-BL, 	h/2
+
+K,7,	-BL, 	0
+K,8,	-BL, 	-h/2
+K,9,	a,	-h/2
+K,10,	BR,	-h/2
+
+
+A,1,2,5,6
+A,2,3,4,5
+A,7,2,9,8
+A,2,3,10,9
+
+
+CYL4, XB, YB, DB/2
+CYL4, XB, -YB, DB/2
+
+ASBA,ALL,5
+ASBA,ALL,6
+ALLSEL
+
+			! Mesh refinement vorbereiten
+WPCSYS,,20
+WPOFFS,-ref_window
+WPROTA,,,90 
+ASBW,ALL,,DELETE
+WPCSYS,,0 
+
+WPCSYS,,20
+WPOFFS,ref_window
+WPROTA,,,90 
+ASBW,ALL,,DELETE
+WPCSYS,,0 
+
+WPCSYS,,20
+WPOFFS,,-ref_window
+WPROTA,,90 
+ASBW,ALL,,DELETE
+WPCSYS,,0
+
+WPCSYS,,20
+WPOFFS,,ref_window
+WPROTA,,90 
+ASBW,ALL,,DELETE
+WPCSYS,,0
+
+
+
+C*****************************************************************
+C*** Meshing 
+C*****************************************************************
+
+TYPE,1
+MAT,1
+
+CSYS,20			! Fine mesh around crack tip
+ASEL,S,LOC,X,-ref_window,ref_window
+ASEL,R,LOC,Y,-ref_window,ref_window
+ESIZE,esize
+AMESH,ALL
+
+ASEL,INVE		! Coarse mesh away from crack tip
+ESIZE,2
+AMESH,ALL
+
+CSYS,0
+ALLSEL
+
+
+
+C********************
+C*** Krafteinleitung
+C********************
+
+TYPE,2
+MAT,2
+
+*get,Nmax,NODE,0,num,maxd
+N,Nmax+1, XB, YB
+N,Nmax+2, XB, -YB
+
+LOCAL, 21, 1, XB, YB
+CSYS,21
+
+
+angle=180
+NSEL,S,LOC,X,DB/2
+NSEL,R,LOC,Y,90-angle,90+angle
+*GET,nsel,NODE,0,COUNT
+nodenum=0
+*DO,kk,1,nsel
+	nodenum=ndnext(nodenum)
+	E,nodenum,Nmax+1
+*ENDDO
+
+LOCAL, 22, 1, XB, -YB
+CSYS,22
+
+NSEL,S,LOC,X,DB/2
+NSEL,R,LOC,Y,270-angle,270+angle
+*GET,nsel,NODE,0,COUNT
+nodenum=0
+*DO,kk,1,nsel
+	nodenum=ndnext(nodenum)
+	E,nodenum,Nmax+2
+*ENDDO
+
+CSYS,0
+
+
+
+C*****************************************************************
+C*** Randbedinungen
+C*****************************************************************
+CSYS,0
+SELTOL,0.001
+
+
+! OBEN
+CSYS,21
+NSEL,S,LOC,X,0
+NSEL,R,LOC,Y,0
+
+F,ALL,FY,Force
+D,ALL,UX
+D,ALL,UZ
+D,ALL,ROTX
+D,ALL,ROTY
+
+
+! UNTEN
+CSYS,22
+NSEL,S,LOC,X,0
+NSEL,R,LOC,Y,0
+
+D,ALL,UX
+D,ALL,UY
+D,ALL,UZ
+D,ALL,ROTX
+D,ALL,ROTY
+
+CSYS,0
+
+
+
+C*****************************************************************
+C*** Bruchmechanik
+C*****************************************************************
+
+CSYS,20				! Define the crack tip as a component.
+NSEL,S,LOC,X,0
+NSEL,R,LOC,Y,0
+CM,CRACK_TIP_NODE_CM1,node
+
+CSYS,0				! Define assistant node
+NSEL,S,LOC,X,0
+NSEL,R,LOC,Y,0
+*GET,AssistNode,NODE,0,NUM,max
+
+
+				! Define a new VCCT calculation
+CINT,NEW,1
+CINT,TYPE,VCCT	!SIFS oder JINT oder VCCT
+CINT,CTNC,CRACK_TIP_NODE_CM1,AssistNode,1
+CINT,NORM,20,2
+CINT,SYMM,OFF
+
+				! Define a new J-Integral calculation
+CINT,NEW,2
+CINT,TYPE,JINT	!SIFS oder JINT oder VCCT
+CINT,CTNC,CRACK_TIP_NODE_CM1,AssistNode,1
+CINT,NORM,20,2
+CINT,NCON,6
+CINT,SYMM,OFF
+
+CINT,NEW,3
+CINT,TYPE,SIFS	!SIFS oder JINT oder VCCT
+CINT,CTNC,CRACK_TIP_NODE_CM1,AssistNode,1
+CINT,NORM,20,2
+CINT,NCON,6
+CINT,SYMM,OFF
+
+CINT,NEW,4
+CINT,TYPE,TSTRESS	!SIFS oder JINT oder VCCT
+CINT,CTNC,CRACK_TIP_NODE_CM1,AssistNode,1
+CINT,NORM,20,2
+CINT,NCON,6
+CINT,SYMM,OFF
+
+
+
+C*****************************************************************
+C*** Lösen
+C*****************************************************************
+/SOLU
+ALLSEL
+*GET,anfangszeit,active,0,time,wall
+
+ANTYPE,STATIC
+OUTRES,CINT,LAST
+SOLVE
+
+
+*GET,endzeit,active,0,time,wall
+rechenzeit=endzeit-anfangszeit
+
+
+
+C*****************************************************************
+C*** Postprocessing
+C*****************************************************************
+/POST1
+CSYS,0
+
+
+!/show,png
+
+!PLDISP,0
+!PLESOL,S,EQV,0,1.0
+!PLNSOL,S,EQV,0,1.0
+
+!/show,close
+
+!/REPLOT,RESIZE
+
+
+
+C*****************************************************************
+C*** Export
+C*****************************************************************
+
+/INPUT,04_export,inp
+/INPUT,04_nodedata_export,inp
