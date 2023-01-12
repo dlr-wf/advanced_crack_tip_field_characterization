@@ -8,7 +8,8 @@ International Journal of Fatigue.
 DOI: 10.1016/j.ijfatigue.2023.107501
 ```
 The published article is available [here](https://doi.org/10.1016/j.ijfatigue.2023.107501).
-The preprint is available on [arXiv](https://arxiv.org/).
+The preprint is available on [arXiv](
+https://doi.org/10.48550/arXiv.2301.04395).
 
 ## Abstract
 *The quantitative characterisation of crack tip loads is fundamental in fracture mechanics.
