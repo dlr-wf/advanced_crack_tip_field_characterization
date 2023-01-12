@@ -7,9 +7,9 @@ Advanced crack tip field characterization using conjugate work integrals.
 International Journal of Fatigue.
 DOI: 10.1016/j.ijfatigue.2023.107501
 ```
-The published article is available [here](https://doi.org/10.1016/j.ijfatigue.2023.107501).
+The published article is available [here](https://doi.org/10.1016/j.ijfatigue.2023.107501){:target="_blank"}.
 The preprint is available on [arXiv](
-https://doi.org/10.48550/arXiv.2301.04395).
+https://doi.org/10.48550/arXiv.2301.04395){:target="_blank"}.
 
 ## Abstract
 *The quantitative characterisation of crack tip loads is fundamental in fracture mechanics.
@@ -22,9 +22,9 @@ lengths, external forces, and sizes for widely used middle tension, single-edge 
 and compact tension specimen under mode-I loading.*
 
 ## Dependencies
-*  [Python 3.8.5](https://www.python.org/downloads/release/python-385/)
-*  [Ansys Mechanical 2021 R2](https://www.ansys.com/): To run the simulations, we used Ansys Mechanical APDL 2021 R2.
-*  [CrackPy (internal version 0.9.3)](https://github.com/dlr-wf/crackpy): The integral method and the fitting method are implemented in CrackPy. 
+*  [Python 3.8.5](https://www.python.org/downloads/release/python-385/){:target="_blank"}
+*  [Ansys Mechanical 2021 R2](https://www.ansys.com/){:target="_blank"}: To run the simulations, we used Ansys Mechanical APDL 2021 R2.
+*  [CrackPy (internal version 0.9.3)](https://github.com/dlr-wf/crackpy){:target="_blank"}: The integral method and the fitting method are implemented in CrackPy. 
 The scripts are based on the unpublished pre-release version 0.9.3. **Therefore, the scripts might need to be adapted to work with the published version of CrackPy.**
 
 ## Usage
