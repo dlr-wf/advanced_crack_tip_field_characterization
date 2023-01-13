@@ -1,4 +1,5 @@
 # Advanced crack tip field characterization
+[![DOI](https://zenodo.org/badge/587703903.svg)](https://zenodo.org/badge/latestdoi/587703903)
 
 This repository contains the code used to generate the results of the research article
 ```
